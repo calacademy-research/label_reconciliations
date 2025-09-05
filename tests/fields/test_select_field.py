@@ -1,7 +1,7 @@
 import unittest
 
-from pylib.fields.select_field import SelectField
-from pylib.fields.base_field import Flag
+from src.reconciler.pylib.fields.select_field import SelectField
+from src.reconciler.pylib.fields.base_field import Flag
 
 
 class TestSelectField(unittest.TestCase):

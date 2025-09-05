@@ -9,11 +9,11 @@ from jinja2 import Environment
 from jinja2 import PackageLoader
 from pandas.io.formats.style import Styler
 
-from pylib.fields.base_field import Flag
-from pylib.flag import FLAG_END
-from pylib.flag import flag_labels
-from pylib.flag import PROBLEM
-from pylib.table import Table
+from src.reconciler.pylib.fields.base_field import Flag
+from src.reconciler.pylib.flag import FLAG_END
+from src.reconciler.pylib.flag import flag_labels
+from src.reconciler.pylib.flag import PROBLEM
+from src.reconciler.pylib.table import Table
 
 ALIAS = "__alias__"
 ROW_TYPE = "__row_type__"
@@ -32,7 +32,7 @@ def report(args, unreconciled: Table, reconciled: Table):
     transcribers_df = get_transcribers_df(args, unreconciled_df)
     transcribers = get_transcribers_table(transcribers_df)
 
-    env = Environment(loader=PackageLoader("reconcile", "."))
+    env = Environment(loader=PackageLoader("reconcile", ""))
     template = env.get_template("pylib/summary/summary.html")
 
     filters = {}

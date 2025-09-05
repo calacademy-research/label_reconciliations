@@ -1,8 +1,8 @@
 from dataclasses import dataclass
 from typing import Any
 
-from pylib.fields.base_field import BaseField
-from pylib.flag import Flag
+from src.reconciler.pylib.fields.base_field import BaseField
+from src.reconciler.pylib.flag import Flag
 
 
 @dataclass(kw_only=True)

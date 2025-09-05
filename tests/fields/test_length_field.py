@@ -1,7 +1,7 @@
 import unittest
 
-from pylib.fields.length_field import LengthField
-from pylib.fields.base_field import Flag
+from src.reconciler.pylib.fields import LengthField
+from src.reconciler.pylib.fields.base_field import Flag
 
 
 class TestLengthField(unittest.TestCase):

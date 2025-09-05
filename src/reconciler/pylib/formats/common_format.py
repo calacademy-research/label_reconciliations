@@ -1,16 +1,16 @@
 import json
 import warnings
 
-from pylib import utils
-from pylib.fields.box_field import BoxField
-from pylib.fields.length_field import LengthField
-from pylib.fields.noop_field import NoOpField
-from pylib.fields.point_field import PointField
-from pylib.fields.same_field import SameField
-from pylib.fields.select_field import SelectField
-from pylib.fields.text_field import TextField
-from pylib.row import Row
-from pylib.table import Table
+from src.reconciler.pylib import utils
+from src.reconciler.pylib.fields.box_field import BoxField
+from src.reconciler.pylib.fields.length_field import LengthField
+from src.reconciler.pylib.fields.noop_field import NoOpField
+from src.reconciler.pylib.fields.point_field import PointField
+from src.reconciler.pylib.fields.same_field import SameField
+from src.reconciler.pylib.fields.select_field import SelectField
+from src.reconciler.pylib.fields.text_field import TextField
+from src.reconciler.pylib.row import Row
+from src.reconciler.pylib.table import Table
 
 
 def validate_columns(args, df):

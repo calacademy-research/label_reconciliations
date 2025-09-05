@@ -1,7 +1,7 @@
 import unittest
 
-from pylib.fields.box_field import BoxField
-from pylib.fields.base_field import Flag
+from src.reconciler.pylib.fields.box_field import BoxField
+from src.reconciler.pylib.fields.base_field import Flag
 
 
 class TestBoxField(unittest.TestCase):

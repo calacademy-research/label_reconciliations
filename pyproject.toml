@@ -1,0 +1,31 @@
+[build-system]
+requires = ["hatchling>=1.25"]
+build-backend = "hatchling.build"
+
+[project]
+name = "reconciler"
+version = "0.1.0"
+description = "cli and library for data reconciliation"
+readme = "README.md"
+license = { file = "LICENSE" }
+requires-python = ">=3.9"
+authors = [
+  { name = "mateo de la roca", email = "mdelaroca@calacademy.org" }
+]
+
+[project.optional-dependencies]
+dev = [
+  "Jinja2==3.1.6",
+  "MarkupSafe==3.0.2",
+  "fuzzywuzzy==0.18.0",
+  "inflect==7.5.0",
+  "jsonpath-ng==1.7.0",
+  "numpy==2.3.2",
+  "pandas==2.3.2",
+  "plotly==6.3.0",
+  "python-Levenshtein==0.27.1",
+  "python-dateutil==2.9.0.post0",
+]
+
+[project.scripts]
+reconcile = "reconciler.reconcile_cli:main"

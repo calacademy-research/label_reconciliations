@@ -1,8 +1,8 @@
 import unittest
 from argparse import Namespace
 
-from pylib.fields.text_field import TextField
-from pylib.fields.base_field import Flag
+from src.reconciler.pylib.fields.text_field import TextField
+from src.reconciler.pylib.fields.base_field import Flag
 
 
 class TestTextField(unittest.TestCase):

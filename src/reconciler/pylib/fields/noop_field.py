@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Any
 
-from pylib.fields.base_field import BaseField
+from src.reconciler.pylib.fields.base_field import BaseField
 
 
 @dataclass(kw_only=True)

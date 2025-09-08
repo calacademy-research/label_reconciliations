@@ -1,14 +1,13 @@
 from dataclasses import dataclass
 from typing import Any
 
-from pylib.fields.base_field import BaseField
-from pylib.fields.controlled_vocab import controlled_vocab
+from label_reconciliations.fields.base_field import BaseField
+from label_reconciliations.fields.controlled_vocab import controlled_vocab
 
 
 @dataclass(kw_only=True)
-class MarkIndexField(BaseField):
+class SelectField(BaseField):
     value: str = ""
-    index: int = -1
 
     def to_dict(self, reconciled=False) -> dict[str, Any]:
         field_dict = {self.header(): self.value}

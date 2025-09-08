@@ -1,7 +1,7 @@
 from collections import defaultdict
 
-from pylib.flag import Flag
-from pylib.utils import P
+from label_reconciliations.flag import Flag
+from label_reconciliations.utils import P
 
 PLACEHOLDERS = ["placeholder"]
 

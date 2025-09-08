@@ -6,19 +6,19 @@ import pandas as pd
 from dateutil.parser import parse as date_parse
 from jsonpath_ng import parse
 
-from pylib import utils
-from pylib.row import BoxField
-from pylib.row import HighlightField
-from pylib.row import LengthField
-from pylib.row import MarkIndexField
-from pylib.row import NoOpField
-from pylib.row import PointField
-from pylib.row import PolygonField
-from pylib.row import Row
-from pylib.row import SameField
-from pylib.row import SelectField
-from pylib.row import TextField
-from pylib.table import Table
+from label_reconciliations import utils
+from label_reconciliations.fields.box_field import BoxField
+from label_reconciliations.fields.highlighter_field import HighlightField
+from label_reconciliations.fields.length_field import LengthField
+from label_reconciliations.fields.mark_index_field import MarkIndexField
+from label_reconciliations.fields.noop_field import NoOpField
+from label_reconciliations.fields.point_field import PointField
+from label_reconciliations.fields.polygon_field import PolygonField
+from label_reconciliations.row import Row
+from label_reconciliations.fields.same_field import SameField
+from label_reconciliations.fields.select_field import SelectField
+from label_reconciliations.fields.text_field import TextField
+from label_reconciliations.table import Table
 
 # WF_String = Strings and values gathered from the workflow CSV file used for table
 # lookups when the expedition CSV values are using UUID-like values as their output

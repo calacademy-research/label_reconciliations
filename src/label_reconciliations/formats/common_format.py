@@ -1,16 +1,16 @@
 import json
 import warnings
 
-from pylib import utils
-from pylib.fields.box_field import BoxField
-from pylib.fields.length_field import LengthField
-from pylib.fields.noop_field import NoOpField
-from pylib.fields.point_field import PointField
-from pylib.fields.same_field import SameField
-from pylib.fields.select_field import SelectField
-from pylib.fields.text_field import TextField
-from pylib.row import Row
-from pylib.table import Table
+from label_reconciliations import utils
+from label_reconciliations.fields.box_field import BoxField
+from label_reconciliations.fields.length_field import LengthField
+from label_reconciliations.fields.noop_field import NoOpField
+from label_reconciliations.fields.point_field import PointField
+from label_reconciliations.fields.same_field import SameField
+from label_reconciliations.fields.select_field import SelectField
+from label_reconciliations.fields.text_field import TextField
+from label_reconciliations.row import Row
+from label_reconciliations.table import Table
 
 
 def validate_columns(args, df):

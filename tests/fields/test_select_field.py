@@ -1,7 +1,7 @@
 import unittest
 
-from pylib.fields.select_field import SelectField
-from pylib.fields.base_field import Flag
+from src.label_reconciliations.fields.select_field import SelectField
+from src.label_reconciliations.flag import Flag
 
 
 class TestSelectField(unittest.TestCase):

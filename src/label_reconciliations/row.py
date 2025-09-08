@@ -2,16 +2,16 @@ from dataclasses import dataclass, field as field_default
 from collections import defaultdict
 from typing import Any, Union
 
-from pylib.fields.box_field import BoxField
-from pylib.fields.highlighter_field import HighlightField
-from pylib.fields.length_field import LengthField
-from pylib.fields.mark_index_field import MarkIndexField
-from pylib.fields.noop_field import NoOpField
-from pylib.fields.point_field import PointField
-from pylib.fields.polygon_field import PolygonField
-from pylib.fields.same_field import SameField
-from pylib.fields.select_field import SelectField
-from pylib.fields.text_field import TextField
+from label_reconciliations.fields.box_field import BoxField
+from label_reconciliations.fields.highlighter_field import HighlightField
+from label_reconciliations.fields.length_field import LengthField
+from label_reconciliations.fields.mark_index_field import MarkIndexField
+from label_reconciliations.fields.noop_field import NoOpField
+from label_reconciliations.fields.point_field import PointField
+from label_reconciliations.fields.polygon_field import PolygonField
+from label_reconciliations.fields.same_field import SameField
+from label_reconciliations.fields.select_field import SelectField
+from label_reconciliations.fields.text_field import TextField
 
 TaskField = Union[
     BoxField,

@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Any
 
-from pylib.fields.base_field import BaseField
+from label_reconciliations.fields.base_field import BaseField
 
 
 @dataclass(kw_only=True)

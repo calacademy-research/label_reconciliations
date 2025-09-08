@@ -1,7 +1,7 @@
 import unittest
 
-from pylib.fields.box_field import BoxField
-from pylib.fields.base_field import Flag
+from src.label_reconciliations.fields.box_field import BoxField
+from src.label_reconciliations.flag import Flag
 
 
 class TestBoxField(unittest.TestCase):

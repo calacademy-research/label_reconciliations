@@ -19,11 +19,14 @@ VERSION = "0.8.4"
 
 
 # --------------------------- Helpers --------------------------- #
-def _table_to_dataframe(tbl: Table) -> pd.DataFrame:
-    """
-    Best-effort conversion from the internal Table to a pandas DataFrame.
-    Adjust this if your Table exposes a different accessor.
-    """
+def _table_to_dataframe(tbl: Table, args=None) -> pd.DataFrame:
+    if args is not None and hasattr(tbl, "to_df"):
+        try:
+            return tbl.to_df(args, add_note=False)
+        except TypeError:
+            return tbl.to_df(args)
+    if hasattr(tbl, "to_records"):
+        return pd.DataFrame(tbl.to_records(add_note=False))
     if hasattr(tbl, "to_pandas") and callable(getattr(tbl, "to_pandas")):
         return tbl.to_pandas()
     if hasattr(tbl, "dataframe"):
@@ -33,8 +36,9 @@ def _table_to_dataframe(tbl: Table) -> pd.DataFrame:
     except Exception as exc:
         raise TypeError(
             "Cannot convert Table to pandas DataFrame. "
-            "Expose a .to_pandas() or .dataframe attribute on Table."
+            "Implement Table.to_df(args) or Table.to_records()."
         ) from exc
+
 
 
 def _normalize_column_types(
@@ -209,10 +213,9 @@ def run_on_dataframe(
     unreconciled_tbl = out.get("unreconciled")
     reconciled_tbl = out.get("reconciled")
 
-    unreconciled_df = _table_to_dataframe(unreconciled_tbl) if unreconciled_tbl is not None else None
-    reconciled_df = _table_to_dataframe(reconciled_tbl) if reconciled_tbl is not None else None
+    unreconciled_df = _table_to_dataframe(unreconciled_tbl, args) if unreconciled_tbl is not None else None
+    reconciled_df = _table_to_dataframe(reconciled_tbl, args) if reconciled_tbl is not None else None
 
-    # Cleanup
     try:
         os.remove(tmp_in_path)
     except Exception:

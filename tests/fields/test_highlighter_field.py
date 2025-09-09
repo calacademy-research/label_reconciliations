@@ -1,7 +1,7 @@
 import unittest
 
-from pylib.fields.highlighter_field import HighlightField
-from pylib.fields.base_field import Flag
+from src.label_reconciliations.fields.highlighter_field import HighlightField
+from src.label_reconciliations.flag import Flag
 
 
 class TestHighlighterField(unittest.TestCase):

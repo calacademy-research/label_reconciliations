@@ -9,11 +9,11 @@ from jinja2 import Environment
 from jinja2 import PackageLoader
 from pandas.io.formats.style import Styler
 
-from pylib.fields.base_field import Flag
-from pylib.flag import FLAG_END
-from pylib.flag import flag_labels
-from pylib.flag import PROBLEM
-from pylib.table import Table
+from label_reconciliations.flag import Flag
+from label_reconciliations.flag import FLAG_END
+from label_reconciliations.flag import flag_labels
+from label_reconciliations.flag import PROBLEM
+from label_reconciliations.table import Table
 
 ALIAS = "__alias__"
 ROW_TYPE = "__row_type__"

@@ -2,9 +2,9 @@ import statistics as stats
 from dataclasses import dataclass
 from typing import Any
 
-from pylib.fields.base_field import BaseField
-from pylib.flag import Flag
-from pylib.utils import P
+from label_reconciliations.fields.base_field import BaseField
+from label_reconciliations.flag import Flag
+from label_reconciliations.utils import P
 
 
 @dataclass(kw_only=True)

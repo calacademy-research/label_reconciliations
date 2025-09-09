@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from typing import Any, Union
-from pylib.flag import Flag
+from label_reconciliations.flag import Flag
 
 LIKE = """name field_set suffix task_id""".split()
 

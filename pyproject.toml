@@ -1,0 +1,43 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "label-reconciliations"
+version = "0.1.0"
+description = "Cas Fork of Tools for NfN/label reconciliation and formatting."
+readme = "README.md"
+license = { file = "LICENSE" }
+authors = [{ name = "California Academy of Sciences", email = "mdelaroca@calacademy.org" }]
+requires-python = ">=3.9"
+
+[project.optional-dependencies]
+dev = [
+  "Jinja2",
+  "MarkupSafe",
+  "fuzzywuzzy",
+  "inflect",
+  "jsonpath-ng",
+  "numpy",
+  "pandas",
+  "plotly",
+  "python-Levenshtein",
+  "python-dateutil",
+  "pytest",
+]
+
+[project.scripts]
+# console command -> module:function
+label-reconcile = "label_reconciliations.cli:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+# Include non-Python files inside the package (summary assets)
+[tool.setuptools.package-data]
+label_reconciliations = ["summary/*.css", "summary/*.html", "summary/*.js"]
+
+# If you prefer MANIFEST.in, you can use it too, but the table above is enough for wheel installs.

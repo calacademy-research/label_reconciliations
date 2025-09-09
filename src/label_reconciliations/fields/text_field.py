@@ -7,9 +7,9 @@ from typing import Any
 
 from fuzzywuzzy import fuzz  # pylint: disable=import-error
 
-from pylib.fields.base_field import BaseField
-from pylib.flag import Flag
-from pylib.utils import P
+from label_reconciliations.fields.base_field import BaseField
+from label_reconciliations.flag import Flag
+from label_reconciliations.utils import P
 
 FuzzyRatioScore = namedtuple("FuzzyRatioScore", "score field")
 FuzzySetScore = namedtuple("FuzzySetScore", "score tokens field")

@@ -5,9 +5,9 @@ from itertools import groupby
 
 import pandas as pd
 
-from pylib.fields.base_field import Flag
-from pylib.row import Row, AnyField
-from pylib.utils import P
+from .flag import Flag
+from .row import Row, AnyField
+from .utils import P
 
 
 @dataclass

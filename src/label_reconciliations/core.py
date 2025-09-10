@@ -120,12 +120,16 @@ def run(args) -> dict:
     write_unreconciled(args, unreconciled)
 
     reconciled = None
-    if getattr(args, "reconciled", None) or getattr(args, "summary", None):
+    needs_reconcile = bool(
+        getattr(args, "reconciled", None)
+        or getattr(args, "summary", None)
+        or getattr(args, "_force_reconcile", False)
+    )
+    if needs_reconcile:
         reconciled = reconcile_data(args, unreconciled)
         write_reconciled(args, reconciled)
         write_summary(args, unreconciled, reconciled)
 
-    # Support both --zip and --zip-keep styles (keep_originals iff zip_keep provided)
     zip_arg = getattr(args, "zip", None) or getattr(args, "zip_keep", None)
     if zip_arg:
         zip_outputs(
@@ -195,6 +199,7 @@ def run_on_dataframe(
         user_column="user_name",
         max_transcriptions=50,
     )
+    setattr(args, "_force_reconcile", True)
 
     # Validations similar to CLI
     if args.fuzzy_ratio_threshold < 0 or args.fuzzy_ratio_threshold > 100:

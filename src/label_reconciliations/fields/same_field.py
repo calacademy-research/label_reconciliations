@@ -27,7 +27,7 @@ class SameField(BaseField):
             flag = Flag.OK
             note = ""
         else:
-            value = ",".join(g.value for g in use)
+            value = ",".join(str(g.value) for g in use)
             flag = Flag.ERROR
             note = f"Not all values are the same: {value}"
 

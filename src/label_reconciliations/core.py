@@ -14,7 +14,7 @@ from typing import Optional, Tuple, Union, Dict, Iterable
 import pandas as pd
 
 from . import summary, utils
-from .table import Table  # type: ignore
+from .table import Table
 
 VERSION = "0.8.4"
 

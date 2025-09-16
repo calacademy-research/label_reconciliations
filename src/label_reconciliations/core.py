@@ -7,6 +7,7 @@ import os
 import tempfile
 import warnings
 import zipfile
+import json
 from os.path import basename
 from typing import Optional, Tuple, Union, Dict, Iterable
 
@@ -39,6 +40,16 @@ def _table_to_dataframe(tbl: Table, args=None) -> pd.DataFrame:
             "Implement Table.to_df(args) or Table.to_records()."
         ) from exc
 
+
+def _table_to_json(tbl: Table, args=None, *, add_note: bool = False) -> list[dict]:
+    """Return a list of row dicts suitable for json.dumps()."""
+    if hasattr(tbl, "to_records"):
+        return tbl.to_records(add_note=add_note)
+    # fallback via DataFrame if needed
+    if args is not None and hasattr(tbl, "to_df"):
+        df = tbl.to_df(args, add_note=add_note)
+        return df.to_dict(orient="records")
+    raise TypeError("Table lacks to_records()/to_df(); cannot convert to JSON.")
 
 
 def _normalize_column_types(
@@ -142,8 +153,136 @@ def run(args) -> dict:
 
     return {"unreconciled": unreconciled, "reconciled": reconciled}
 
+def _build_args(
+    *,
+    input_path: str,
+    fmt_key: str,                        # e.g., "csv_format", "json_format", "nfn_format"
+    column_types,
+    group_by: str,
+    workflow_name,
+    workflow_id,
+    fuzzy_ratio_threshold: int,
+    fuzzy_set_threshold: int,
+    join_distance: int,
+    page_size: int,
+    no_summary_detail: bool,
+    explanations: bool,
+    workflow_csv: str,
+) -> argparse.Namespace:
+    """Create the argparse-like Namespace used by the pipeline."""
+    args = argparse.Namespace(
+        input_file=input_path,
+        unreconciled=None,
+        reconciled=None,
+        summary=None,
+        explanations=bool(explanations),
+        zip=None,
+        zip_keep=None,
+        workflow_name=workflow_name,
+        workflow_id=workflow_id,
+        fuzzy_ratio_threshold=int(fuzzy_ratio_threshold),
+        fuzzy_set_threshold=int(fuzzy_set_threshold),
+        join_distance=int(join_distance),
+        workflow_csv=str(workflow_csv or ""),
+        format=fmt_key,
+        column_types=_normalize_column_types(column_types),
+        group_by=str(group_by),
+        page_size=int(page_size),
+        no_summary_detail=bool(no_summary_detail),
+        row_key="classification_id",
+        user_column="user_name",
+        max_transcriptions=50,
+    )
+    setattr(args, "_force_reconcile", True)
+    return args
 
-# --------------------------- DataFrame-first API --------------------------- #
+
+def _validate_args(args: argparse.Namespace, *, format_choice: str) -> None:
+    """Common validation mirroring the CLI behavior."""
+    if args.fuzzy_ratio_threshold < 0 or args.fuzzy_ratio_threshold > 100:
+        utils.error_exit("--fuzzy-ratio-threshold must be between 0 and 100.")
+    if args.fuzzy_set_threshold < 0 or args.fuzzy_set_threshold > 100:
+        utils.error_exit("--fuzzy-set-threshold must be between 0 and 100.")
+
+    # Warnings depending on plugin
+    if format_choice == "json" and not args.column_types:
+        warnings.warn(
+            "No column_types provided for JSON format. Default field type is NoOp; "
+            "reconciliation may not change fields as expected."
+        )
+    if format_choice == "nfn" and args.column_types:
+        warnings.warn("Column types are ignored for 'nfn' format.")
+
+
+def _run_with_input_path(
+    *,
+    input_path: str,
+    format_choice: str,  # "csv" | "json" | "nfn"
+    column_types=None,
+    group_by="subject_id",
+    workflow_name=None,
+    workflow_id=None,
+    fuzzy_ratio_threshold=90,
+    fuzzy_set_threshold=50,
+    join_distance=6,
+    page_size=20,
+    no_summary_detail=False,
+    explanations=False,
+    workflow_csv="",
+) -> tuple[dict, argparse.Namespace]:
+    """Build args, validate, run pipeline, return (out_tables, args)."""
+    fmt_key = f"{format_choice}_format"
+    args = _build_args(
+        input_path=input_path,
+        fmt_key=fmt_key,
+        column_types=column_types,
+        group_by=group_by,
+        workflow_name=workflow_name,
+        workflow_id=workflow_id,
+        fuzzy_ratio_threshold=fuzzy_ratio_threshold,
+        fuzzy_set_threshold=fuzzy_set_threshold,
+        join_distance=join_distance,
+        page_size=page_size,
+        no_summary_detail=no_summary_detail,
+        explanations=explanations,
+        workflow_csv=workflow_csv,
+    )
+    _validate_args(args, format_choice=format_choice)
+    return run(args), args
+
+
+def _materialize_json_input(data: Union[str, bytes, dict, list]) -> tuple[str, bool]:
+    """Return a file path containing JSON and whether we should delete it afterwards."""
+    # If it's an existing file path, use it directly
+    if isinstance(data, str) and os.path.exists(data):
+        return data, False
+
+    # Otherwise, write to a temp file
+    with tempfile.NamedTemporaryFile(suffix=".json", delete=False) as tmp_in:
+        tmp_path = tmp_in.name
+    if isinstance(data, (dict, list)):
+        with open(tmp_path, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False)
+    elif isinstance(data, str):
+        with open(tmp_path, "w", encoding="utf-8") as f:
+            f.write(data)
+    elif isinstance(data, bytes):
+        with open(tmp_path, "wb") as f:
+            f.write(data)
+    else:
+        raise TypeError("data must be a dict/list JSON object, JSON string/bytes, or a path str.")
+    return tmp_path, True
+
+
+def _materialize_dataframe_input(df: pd.DataFrame) -> str:
+    """Write DataFrame to a temp CSV and return its path."""
+    with tempfile.NamedTemporaryFile(suffix=".csv", delete=False) as tmp_in:
+        tmp_path = tmp_in.name
+    df.to_csv(tmp_path, index=False)
+    return tmp_path
+
+
+
 def run_on_dataframe(
     df: pd.DataFrame,
     *,
@@ -159,71 +298,85 @@ def run_on_dataframe(
     explanations: bool = False,
     workflow_csv: str = "",
 ) -> Tuple[pd.DataFrame, Optional[pd.DataFrame]]:
-    """
-    Run reconciliation fully in-memory:
-      - Input: pandas DataFrame
-      - Output: (unreconciled_df, reconciled_df or None)
-
-    Notes:
-      * Uses the existing 'csv_format' plugin via a temporary CSV.
-      * Does NOT write any output files. Returns DataFrames directly.
-      * 'column_types' is recommended for CSV/JSON; provide a dict or iterable.
-        Example dict: {"field1": "select", "field2": "text"}
-    """
-    # Temp CSV for the csv_format reader
-    with tempfile.NamedTemporaryFile(suffix=".csv", delete=False) as tmp_in:
-        tmp_in_path = tmp_in.name
-    df.to_csv(tmp_in_path, index=False)
-
-    # Build an argparse-like Namespace mirroring CLI defaults/behavior
-    args = argparse.Namespace(
-        input_file=tmp_in_path,
-        unreconciled=None,
-        reconciled=None,
-        summary=None,
-        explanations=bool(explanations),
-        zip=None,
-        zip_keep=None,
-        workflow_name=workflow_name,
-        workflow_id=workflow_id,
-        fuzzy_ratio_threshold=int(fuzzy_ratio_threshold),
-        fuzzy_set_threshold=int(fuzzy_set_threshold),
-        join_distance=int(join_distance),
-        workflow_csv=str(workflow_csv or ""),
-        format="csv_format",  # force CSV pipeline
-        column_types=_normalize_column_types(column_types),
-        group_by=str(group_by),
-        page_size=int(page_size),
-        no_summary_detail=bool(no_summary_detail),
-        row_key="classification_id",
-        user_column="user_name",
-        max_transcriptions=50,
-    )
-    setattr(args, "_force_reconcile", True)
-
-    # Validations similar to CLI
-    if args.fuzzy_ratio_threshold < 0 or args.fuzzy_ratio_threshold > 100:
-        utils.error_exit("--fuzzy-ratio-threshold must be between 0 and 100.")
-    if args.fuzzy_set_threshold < 0 or args.fuzzy_set_threshold > 100:
-        utils.error_exit("--fuzzy-set-threshold must be between 0 and 100.")
-    if not args.column_types:
-        warnings.warn(
-            "No --column-types provided. Default field type is NoOp; "
-            "reconciliation may not change fields as expected."
-        )
-
-    out = run(args)
-
-    # Convert Tables -> DataFrames
-    unreconciled_tbl = out.get("unreconciled")
-    reconciled_tbl = out.get("reconciled")
-
-    unreconciled_df = _table_to_dataframe(unreconciled_tbl, args) if unreconciled_tbl is not None else None
-    reconciled_df = _table_to_dataframe(reconciled_tbl, args) if reconciled_tbl is not None else None
-
+    """Run reconciliation from a pandas DataFrame and return DataFrames."""
+    tmp_in_path = _materialize_dataframe_input(df)
     try:
-        os.remove(tmp_in_path)
-    except Exception:
-        pass
+        out, args = _run_with_input_path(
+            input_path=tmp_in_path,
+            format_choice="csv",
+            column_types=column_types,
+            group_by=group_by,
+            workflow_name=workflow_name,
+            workflow_id=workflow_id,
+            fuzzy_ratio_threshold=fuzzy_ratio_threshold,
+            fuzzy_set_threshold=fuzzy_set_threshold,
+            join_distance=join_distance,
+            page_size=page_size,
+            no_summary_detail=no_summary_detail,
+            explanations=explanations,
+            workflow_csv=workflow_csv,
+        )
+        unreconciled_tbl = out.get("unreconciled")
+        reconciled_tbl = out.get("reconciled")
+        unrec_df = _table_to_dataframe(unreconciled_tbl, args) if unreconciled_tbl is not None else None
+        rec_df   = _table_to_dataframe(reconciled_tbl,    args) if reconciled_tbl    is not None else None
+        return unrec_df, rec_df
+    finally:
+        try:
+            os.remove(tmp_in_path)
+        except Exception:
+            pass
 
-    return unreconciled_df, reconciled_df
+
+def run_on_json(
+    data: Union[str, bytes, dict, list],
+    *,
+    format_choice: str = "json",     # "json" or "nfn"
+    column_types: Optional[Union[Dict[str, str], Iterable[str]]] = None,
+    group_by: str = "subject_id",
+    workflow_name: Optional[str] = None,
+    workflow_id: Optional[int] = None,
+    fuzzy_ratio_threshold: int = 90,
+    fuzzy_set_threshold: int = 50,
+    join_distance: int = 6,
+    page_size: int = 20,
+    no_summary_detail: bool = False,
+    explanations: bool = False,
+    workflow_csv: str = "",
+    as_text: bool = False,
+    indent: Optional[int] = None,
+) -> Tuple[Union[list, str], Optional[Union[list, str]]]:
+    """Run reconciliation from JSON and return JSON (list[dict] or JSON strings)."""
+    tmp_in_path, cleanup = _materialize_json_input(data)
+    try:
+        out, args = _run_with_input_path(
+            input_path=tmp_in_path,
+            format_choice=format_choice,  # "json" or "nfn"
+            column_types=column_types,
+            group_by=group_by,
+            workflow_name=workflow_name,
+            workflow_id=workflow_id,
+            fuzzy_ratio_threshold=fuzzy_ratio_threshold,
+            fuzzy_set_threshold=fuzzy_set_threshold,
+            join_distance=join_distance,
+            page_size=page_size,
+            no_summary_detail=no_summary_detail,
+            explanations=explanations,
+            workflow_csv=workflow_csv,
+        )
+        unreconciled_tbl = out.get("unreconciled")
+        reconciled_tbl = out.get("reconciled")
+        unrec = _table_to_json(unreconciled_tbl, args)
+        rec   = _table_to_json(reconciled_tbl,    args) if reconciled_tbl is not None else None
+
+        if as_text:
+            unrec_text = json.dumps(unrec, ensure_ascii=False, indent=indent)
+            rec_text   = json.dumps(rec,  ensure_ascii=False, indent=indent) if rec is not None else None
+            return unrec_text, rec_text
+        return unrec, rec
+    finally:
+        if cleanup:
+            try:
+                os.remove(tmp_in_path)
+            except Exception:
+                pass

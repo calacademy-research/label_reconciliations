@@ -11,8 +11,7 @@ license = { file = "LICENSE" }
 authors = [{ name = "California Academy of Sciences", email = "mdelaroca@calacademy.org" }]
 requires-python = ">=3.9"
 
-[project.optional-dependencies]
-dev = [
+dependencies = [
   "Jinja2",
   "MarkupSafe",
   "fuzzywuzzy",

@@ -327,56 +327,56 @@ def run_on_dataframe(
         except Exception:
             pass
 
-
-def run_on_json(
-    data: Union[str, bytes, dict, list],
-    *,
-    format_choice: str = "json",     # "json" or "nfn"
-    column_types: Optional[Union[Dict[str, str], Iterable[str]]] = None,
-    group_by: str = "subject_id",
-    workflow_name: Optional[str] = None,
-    workflow_id: Optional[int] = None,
-    fuzzy_ratio_threshold: int = 90,
-    fuzzy_set_threshold: int = 50,
-    join_distance: int = 6,
-    page_size: int = 20,
-    no_summary_detail: bool = False,
-    explanations: bool = False,
-    workflow_csv: str = "",
-    as_text: bool = False,
-    indent: Optional[int] = None,
-) -> Tuple[Union[list, str], Optional[Union[list, str]]]:
-    """Run reconciliation from JSON and return JSON (list[dict] or JSON strings)."""
-    tmp_in_path, cleanup = _materialize_json_input(data)
-    try:
-        out, args = _run_with_input_path(
-            input_path=tmp_in_path,
-            format_choice=format_choice,  # "json" or "nfn"
-            column_types=column_types,
-            group_by=group_by,
-            workflow_name=workflow_name,
-            workflow_id=workflow_id,
-            fuzzy_ratio_threshold=fuzzy_ratio_threshold,
-            fuzzy_set_threshold=fuzzy_set_threshold,
-            join_distance=join_distance,
-            page_size=page_size,
-            no_summary_detail=no_summary_detail,
-            explanations=explanations,
-            workflow_csv=workflow_csv,
-        )
-        unreconciled_tbl = out.get("unreconciled")
-        reconciled_tbl = out.get("reconciled")
-        unrec = _table_to_json(unreconciled_tbl, args)
-        rec   = _table_to_json(reconciled_tbl,    args) if reconciled_tbl is not None else None
-
-        if as_text:
-            unrec_text = json.dumps(unrec, ensure_ascii=False, indent=indent)
-            rec_text   = json.dumps(rec,  ensure_ascii=False, indent=indent) if rec is not None else None
-            return unrec_text, rec_text
-        return unrec, rec
-    finally:
-        if cleanup:
-            try:
-                os.remove(tmp_in_path)
-            except Exception:
-                pass
+###BROKEN###
+# def run_on_json(
+#     data: Union[str, bytes, dict, list],
+#     *,
+#     format_choice: str = "json",     # "json" or "nfn"
+#     column_types: Optional[Union[Dict[str, str], Iterable[str]]] = None,
+#     group_by: str = "subject_id",
+#     workflow_name: Optional[str] = None,
+#     workflow_id: Optional[int] = None,
+#     fuzzy_ratio_threshold: int = 90,
+#     fuzzy_set_threshold: int = 50,
+#     join_distance: int = 6,
+#     page_size: int = 20,
+#     no_summary_detail: bool = False,
+#     explanations: bool = False,
+#     workflow_csv: str = "",
+#     as_text: bool = False,
+#     indent: Optional[int] = None,
+# ) -> Tuple[Union[list, str], Optional[Union[list, str]]]:
+#     """Run reconciliation from JSON and return JSON (list[dict] or JSON strings)."""
+#     tmp_in_path, cleanup = _materialize_json_input(data)
+#     try:
+#         out, args = _run_with_input_path(
+#             input_path=tmp_in_path,
+#             format_choice=format_choice,  # "json" or "nfn"
+#             column_types=column_types,
+#             group_by=group_by,
+#             workflow_name=workflow_name,
+#             workflow_id=workflow_id,
+#             fuzzy_ratio_threshold=fuzzy_ratio_threshold,
+#             fuzzy_set_threshold=fuzzy_set_threshold,
+#             join_distance=join_distance,
+#             page_size=page_size,
+#             no_summary_detail=no_summary_detail,
+#             explanations=explanations,
+#             workflow_csv=workflow_csv,
+#         )
+#         unreconciled_tbl = out.get("unreconciled")
+#         reconciled_tbl = out.get("reconciled")
+#         unrec = _table_to_json(unreconciled_tbl, args)
+#         rec   = _table_to_json(reconciled_tbl,    args) if reconciled_tbl is not None else None
+#
+#         if as_text:
+#             unrec_text = json.dumps(unrec, ensure_ascii=False, indent=indent)
+#             rec_text   = json.dumps(rec,  ensure_ascii=False, indent=indent) if rec is not None else None
+#             return unrec_text, rec_text
+#         return unrec, rec
+#     finally:
+#         if cleanup:
+#             try:
+#                 os.remove(tmp_in_path)
+#             except Exception:
+#                 pass

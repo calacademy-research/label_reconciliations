@@ -3,7 +3,7 @@ import re
 from collections import defaultdict, namedtuple
 from dataclasses import dataclass
 from itertools import combinations
-from typing import Any
+from typing import Any, Tuple, List
 
 from fuzzywuzzy import fuzz  # pylint: disable=import-error
 
@@ -135,12 +135,37 @@ class TextField(BaseField):
         return cls.like(exact[0], note=note, flag=Flag.NO_MATCH, value="")
 
 
-def exact_matches(group, row_count) -> tuple[int, int, list[list]]:
-    # Sort the fields by values
+def _as_text(val) -> str:
+    if val is None:
+        return ""
+    # If lists/dicts slip in, serialize them in a predictable way.
+    if isinstance(val, (list, dict)):
+        try:
+            import json
+            return json.dumps(val, ensure_ascii=False, sort_keys=True)
+        except Exception:
+            return str(val)
+    return str(val)
+
+def exact_matches(group, row_count) -> Tuple[int, int, List[List]]:
+    """
+    Count distinct exact values within a group of fields.
+
+    Args:
+        group: Iterable of fields, each expected to have a `.value` attribute.
+        row_count: Total number of rows in the group (used to count blanks).
+
+    Returns:
+        count  : Number of non-blank field instances.
+        blanks : Number of rows with no usable value.
+        counters : List of lists, where each inner list is the fields that shared a value,
+                   sorted by frequency (most common first).
+    """
     filled = defaultdict(list)
+
     for field in group:
-        field.value = field.value if field.value else ""
-        if key := " ".join(field.value.split()):
+        text_val = _as_text(field.value).strip()
+        if key := " ".join(text_val.split()):
             filled[key].append(field)
 
     counters = sorted(filled.values(), key=lambda f: -len(f))

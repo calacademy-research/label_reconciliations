@@ -287,6 +287,7 @@ def run_on_dataframe(
     df: pd.DataFrame,
     *,
     column_types: Optional[Union[Dict[str, str], Iterable[str]]] = None,
+    format_choice = "csv",
     group_by: str = "subject_id",
     workflow_name: Optional[str] = None,
     workflow_id: Optional[int] = None,
@@ -303,7 +304,7 @@ def run_on_dataframe(
     try:
         out, args = _run_with_input_path(
             input_path=tmp_in_path,
-            format_choice="csv",
+            format_choice=format_choice,
             column_types=column_types,
             group_by=group_by,
             workflow_name=workflow_name,

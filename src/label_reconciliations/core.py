@@ -11,6 +11,7 @@ import json
 from os.path import basename
 from typing import Optional, Tuple, Union, Dict, Iterable
 
+
 import pandas as pd
 
 from . import summary, utils
@@ -117,11 +118,11 @@ def write_reconciled(args, reconciled: Table) -> None:
 
 
 def write_summary(args, unreconciled: Table, reconciled: Table) -> None:
-    if getattr(args, "summary", None):
+    if getattr(args, "summary_path", None):
         summary.report(args, unreconciled, reconciled)
 
 
-def run(args, return_summary = False) -> dict:
+def run(args) -> dict:
     """Programmatic entry point (file-based). Returns dict with Table objects."""
     unreconciled: Table = read_unreconciled(args)
 
@@ -133,7 +134,7 @@ def run(args, return_summary = False) -> dict:
     reconciled = None
     needs_reconcile = bool(
         getattr(args, "reconciled", None)
-        or getattr(args, "summary", None)
+        or getattr(args, "summary_path", None)
         or getattr(args, "_force_reconcile", False)
     )
     if needs_reconcile:
@@ -147,22 +148,11 @@ def run(args, return_summary = False) -> dict:
             zip_path=zip_arg,
             unreconciled_path=getattr(args, "unreconciled", None),
             reconciled_path=getattr(args, "reconciled", None),
-            summary_path=getattr(args, "summary", None),
+            summary_path=getattr(args, "summary_path", None),
             keep_originals=bool(getattr(args, "zip_keep", None)),
         )
 
-    if return_summary:
-        summary_path = getattr(args, "summary", None)
-        if getattr(args, "return_summary_html", False):
-            try:
-                with open(summary_path, "r", encoding="utf-8") as f:
-                    summary_html = f.read()
-            except Exception:
-                summary_html = None
-    else:
-        summary_html = None
-
-    return {"unreconciled": unreconciled, "reconciled": reconciled, "summary_html": summary_html}
+    return {"unreconciled": unreconciled, "reconciled": reconciled}
 
 def _build_args(
     *,
@@ -179,13 +169,14 @@ def _build_args(
     no_summary_detail: bool,
     explanations: bool,
     workflow_csv: str,
+    summary_path: str
 ) -> argparse.Namespace:
     """Create the argparse-like Namespace used by the pipeline."""
     args = argparse.Namespace(
         input_file=input_path,
         unreconciled=None,
         reconciled=None,
-        summary=None,
+        summary_path=summary_path,
         explanations=bool(explanations),
         zip=None,
         zip_keep=None,
@@ -238,9 +229,9 @@ def _run_with_input_path(
     join_distance=6,
     page_size=20,
     no_summary_detail=False,
-    return_summary=False,
     explanations=False,
     workflow_csv="",
+    summary_path="",
 ) -> tuple[dict, argparse.Namespace]:
     """Build args, validate, run pipeline, return (out_tables, args)."""
     fmt_key = f"{format_choice}_format"
@@ -258,9 +249,10 @@ def _run_with_input_path(
         no_summary_detail=no_summary_detail,
         explanations=explanations,
         workflow_csv=workflow_csv,
+        summary_path=summary_path
     )
     _validate_args(args, format_choice=format_choice)
-    return run(args, return_summary), args
+    return run(args), args
 
 
 def _materialize_json_input(data: Union[str, bytes, dict, list]) -> tuple[str, bool]:
@@ -308,9 +300,9 @@ def run_on_dataframe(
     join_distance: int = 6,
     page_size: int = 20,
     no_summary_detail: bool = False,
-    return_summary: bool = False,
     explanations: bool = False,
     workflow_csv: str = "",
+    summary_path: str = "",
 ) -> Tuple[pd.DataFrame, Optional[pd.DataFrame]]:
     """Run reconciliation from a pandas DataFrame and return DataFrames."""
     tmp_in_path = _materialize_dataframe_input(df)
@@ -327,16 +319,15 @@ def run_on_dataframe(
             join_distance=join_distance,
             page_size=page_size,
             no_summary_detail=no_summary_detail,
-            return_summary= return_summary,
             explanations=explanations,
             workflow_csv=workflow_csv,
+            summary_path=summary_path
         )
         unreconciled_tbl = out.get("unreconciled")
         reconciled_tbl = out.get("reconciled")
-        summary_html = out.get("summary_html")
         unrec_df = _table_to_dataframe(unreconciled_tbl, args) if unreconciled_tbl is not None else None
-        rec_df   = _table_to_dataframe(reconciled_tbl,    args) if reconciled_tbl is not None else None
-        return unrec_df, rec_df, summary_html
+        rec_df = _table_to_dataframe(reconciled_tbl, args) if reconciled_tbl is not None else None
+        return unrec_df, rec_df
     finally:
         try:
             os.remove(tmp_in_path)
